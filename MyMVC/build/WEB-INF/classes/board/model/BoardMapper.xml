@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board.model.BoardMapper">
+	
+	
+	<!-- [게시글 목록] - 글쓰기 -->
+	<insert id="insertBoard" parameterType="Board">
+      insert into board values(board_idx_seq.nextval,#{name},#{email:VARCHAR},#{homepage:VARCHAR},
+      #{pwd},#{subject:VARCHAR},#{content:VARCHAR},systimestamp,#{readnum:NUMERIC},#{filename:VARCHAR},#{filesize:NUMERIC},
+      #{refer},#{lev},#{sunbun}
+      )      
+   </insert>
+   
+   
+   <!-- [게시글 목록] -->
+   <select id = "listBoard" resultType="Board">
+   		select * from board order by idx asc
+   </select>
+   
+   
+   <!-- [게시글 목록] 페이징 처리시 -->
+   <select id = "listBoardPaging" parameterType = "map" resultType = "Board">
+   	select * from(select rownum rn, a.*from (select * from board order by idx desc) a) where rn between #{start} and #{end}
+   </select>
+	
+	
+	<!-- 게시글 수 -->
+	<select id="totalCount" resultType="int">
+		select count(*) cnt from board
+	</select>
+	
+	<!-- [글 내용 보기 관련] -조회수 증가 -->
+	<update id="updateReadnum" parameterType = "int">
+		update board set readnum = readnum+1 where idx = #{value}
+	</update>
+	
+	<select id ="selectBoard" parameterType = "int" resultType = "Board">
+		select * from board where idx = #{value}
+	</select>
+	
+	<!-- [글 삭제 및 수정 관련] 해당 글 비번 가져오기 -->
+	<select id="selectPwd" parameterType = "int" resultType = "string">
+		select pwd from board where idx = #{idx}
+	</select>
+	
+	<!-- [글 삭제 및 수정 관련] 해당 글 파일이름 가져오기 -->
+	<select id="selectFile" parameterType = "int" resultType = "string">
+		select filename from board where idx = #{idx}
+	</select>
+	
+	<delete id="deleteBoard" parameterType="int">
+		delete from board where idx = #{idx}
+	</delete>
+	
+	<!-- [글 수정 관련] 글 수정 처리 -->
+	<update id="updateBoard" parameterType="Board">
+		update board set name = #{name}, email = #{email:VARCHAR}, homepage = #{homepage:VARCHAR}, pwd = #{pwd}, subject = #{subject}, content = #{content:VARCHAR}, filename = #{filename:VARCHAR}, filesize = #{filesize:NUMERIC}, wdate = systimestamp where idx = #{idx}
+	</update>
+	
+	<!-- [글 검색 관련] 검색한 글의 게시물 수 가져오기 -->
+	<select id="findTotalCount" parameterType="map" resultType="int" >
+		select count(idx) from board 
+		<where>
+			<if test="findType != null and findString != null ">
+				${findType} like '%' ||#{findString}||'%'
+			</if>
+		</where>	
+	</select>
+	
+	
+	<!-- [글 검색 관련] 검색한 글 목록 가져오기 -->
+	<select id = "findListBoard" parameterType = "map" resultType = "Board">
+   	select * from(select rownum rn, a.*from (select * from board 
+   		<where>
+   		
+	   		<if test="findType != null and findString != ''">
+	   			${findType} like '%'||#{findString}||'%'
+	   		</if>
+   		
+   		</where>
+   	order by idx desc) a) where rn between #{start} and #{end}
+    </select>
+	
+	
+</mapper>
